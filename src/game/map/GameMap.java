@@ -2,7 +2,9 @@
 
 package game.map;
 
+import game.characters.PlayerCharacter;
 import game.core.GameEntity;
+import game.items.GameItem;
 
 import java.util.*;
 
@@ -112,4 +114,21 @@ public class GameMap {
         GameMap other = (GameMap) obj;
         return Objects.equals(this.grid, other.grid);
     }
+
+    public boolean canMoveTo(Position pos, PlayerCharacter player) {
+        List<GameEntity> entities = getEntitiesAt(pos);
+
+        for (GameEntity entity : entities) {
+            if (entity instanceof GameItem item && item.isBlocking()) {
+                return false;
+            }
+
+            if (entity instanceof game.combat.Combatant combatant && combatant != player) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 }

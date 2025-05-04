@@ -14,19 +14,29 @@ import java.util.List;
 
 /**
  * Represents the central world state of the game.
- * Stores all active players, enemies, items, and the map.
+ * Stores all active players, enemies, items, and the game map.
+ *
+ * This class acts as the core model in the MVC architecture.
+ * It notifies listeners whenever the state changes using the observer pattern.
  */
-public class GameWorld {
+public class GameWorld extends GameObservable {
 
+    /** List of all player characters currently in the game */
     private List<PlayerCharacter> players;
+
+    /** List of all enemies currently active in the game */
     private List<Enemy> enemies;
+
+    /** List of all collectible or interactive items in the world */
     private List<GameItem> items;
+
+    /** The map that defines the layout of the world and object positions */
     private GameMap map;
 
     /**
-     * Constructs a new GameWorld with empty lists and a given game map.
+     * Constructs a new GameWorld with empty lists and the given map.
      *
-     * @param map the map to associate with the world
+     * @param map the GameMap to associate with the world
      */
     public GameWorld(GameMap map) {
         this.players = new ArrayList<>();
@@ -54,7 +64,7 @@ public class GameWorld {
     }
 
     /**
-     * Returns the list of items currently in the game.
+     * Returns the list of items currently present in the game.
      *
      * @return list of GameItem objects
      */
@@ -63,7 +73,7 @@ public class GameWorld {
     }
 
     /**
-     * Returns the game map associated with the world.
+     * Returns the map associated with the game world.
      *
      * @return the GameMap object
      */
@@ -72,63 +82,73 @@ public class GameWorld {
     }
 
     /**
-     * Adds a player to the game world.
+     * Adds a player to the world. Notifies listeners if successful.
      *
      * @param p the player to add
      * @return true if added successfully, false otherwise
      */
     public boolean addPlayer(PlayerCharacter p) {
         if (p == null) return false;
-        return players.add(p);
+        boolean added = players.add(p);
+        if (added) notifyGameStateChanged();
+        return added;
     }
 
     /**
-     * Adds an enemy to the game world.
+     * Adds an enemy to the world. Notifies listeners if successful.
      *
      * @param e the enemy to add
      * @return true if added successfully, false otherwise
      */
     public boolean addEnemy(Enemy e) {
         if (e == null) return false;
-        return enemies.add(e);
+        boolean added = enemies.add(e);
+        if (added) notifyGameStateChanged();
+        return added;
     }
 
     /**
-     * Adds an item to the game world.
+     * Adds an item to the world. Notifies listeners if successful.
      *
      * @param item the item to add
      * @return true if added successfully, false otherwise
      */
     public boolean addItem(GameItem item) {
         if (item == null) return false;
-        return items.add(item);
+        boolean added = items.add(item);
+        if (added) notifyGameStateChanged();
+        return added;
     }
 
     /**
-     * Removes an enemy from the game world.
+     * Removes an enemy from the world. Notifies listeners if successful.
      *
      * @param e the enemy to remove
      * @return true if removed successfully, false otherwise
      */
     public boolean removeEnemy(Enemy e) {
-        return enemies.remove(e);
+        boolean removed = enemies.remove(e);
+        if (removed) notifyGameStateChanged();
+        return removed;
     }
 
     /**
-     * Removes an item from the game world.
+     * Removes an item from the world. Notifies listeners if successful.
      *
      * @param item the item to remove
      * @return true if removed successfully, false otherwise
      */
     public boolean removeItem(GameItem item) {
-        return items.remove(item);
+        boolean removed = items.remove(item);
+        if (removed) notifyGameStateChanged();
+        return removed;
     }
 
-
     /**
-     * If the source is capable of dropping loot, this generates the loot and adds it to the world and map.
+     * Handles loot drop generation from a lootable source (like a defeated enemy).
+     * If loot is generated, it is added to the world and map.
      *
-     * @param source the LootDropper entity (e.g., an enemy)
+     * @param source the entity capable of dropping loot
      * @return true if loot was generated and added, false otherwise
      */
     public boolean handleLootDrop(LootDropper source) {
@@ -136,15 +156,15 @@ public class GameWorld {
         Treasure t = source.generateLoot();
         if (t == null) return false;
 
-        addItem(t);
+        boolean added = addItem(t);
         map.addEntity(t);
-        return true;
+        return added;
     }
 
     /**
-     * Returns a summary string describing the game world's state.
+     * Returns a string summary of the current state of the world.
      *
-     * @return a string with the number of players, enemies, and items
+     * @return summary string with player/enemy/item counts
      */
     @Override
     public String toString() {
